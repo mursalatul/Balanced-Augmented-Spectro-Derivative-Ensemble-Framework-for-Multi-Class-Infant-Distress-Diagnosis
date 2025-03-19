@@ -1,0 +1,6 @@
+# dont track the audio file
+*.wav
+
+# dont track the virtual environments
+.conda
+venv

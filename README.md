@@ -24,6 +24,10 @@
    ```bash
    pip install -r requirements.txt
    ```
+   make sure to install `ffmpeg`. suppose you are using conda, then the comment will be
+   ```bash
+   conda install ffmpeg
+   ```
 
 5. Ensure you have the necessary extensions installed in **VS Code** to run Jupyter notebooks.
 

@@ -218,10 +218,26 @@ def main():
 # -----------------------------
 
 if __name__ == "__main__":
-    trained_models, predict_func = main()
+    # -----------------------------
+    # Run 1 time and test a file
+    # -----------------------------
+    # trained_models, predict_func = main()
+    # test_file = "D:/defence/model/donateacry_corpus_cleaned_and_updated_data/discomfort/1309B82C-F146-46F0-A723-45345AFA6EA8-1430703937-1.0-f-48-dc.wav"
+    # print(f"\n🔍 Prediction Results for: {test_file}")
+    # for name, (model, scaler) in trained_models.items():
+    #     prediction = predict_func(test_file, model, scaler)
+    #     print(f"{name}: {prediction}")
 
-    test_file = "D:/defence/model/donateacry_corpus_cleaned_and_updated_data/discomfort/1309B82C-F146-46F0-A723-45345AFA6EA8-1430703937-1.0-f-48-dc.wav"
-    print(f"\n🔍 Prediction Results for: {test_file}")
-    for name, (model, scaler) in trained_models.items():
-        prediction = predict_func(test_file, model, scaler)
-        print(f"{name}: {prediction}")
+    # -----------------------------
+    # run n times and give a list of highest accuracy
+    # -----------------------------
+    best_accuracies = []
+    runtimes = 1
+    for i in range(runtimes):
+        results, trained_models, predict_func = main()
+        best_accuracy = max(results.values())
+        best_accuracies.append(best_accuracy)
+    print(best_accuracies)
+    print("\nBest Accuracies over 5 runs:")
+    for idx, acc in enumerate(best_accuracies, 1):
+        print(f"Run {idx}: {acc * 100:.2f}%")

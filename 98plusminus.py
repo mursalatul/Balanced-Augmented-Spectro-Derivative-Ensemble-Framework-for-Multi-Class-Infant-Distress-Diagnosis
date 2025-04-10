@@ -93,7 +93,7 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
 
     max_class = max(class_counts, key=class_counts.get)
     max_samples = class_counts[max_class]
-    print(f"\n📌 Max class: {folder_names[max_class]} with {max_samples} samples.")
+    # print(f"\n📌 Max class: {folder_names[max_class]} with {max_samples} samples.")
 
     X, y = [], []
 
@@ -169,21 +169,21 @@ def train_model(model, X_train, X_test, y_train, y_test, scaler=None):
 def main():
     # No fixed seeds here to allow variability in each run
     folder_names = ['belly_pain', 'burping', 'discomfort', 'hungry', 'tired']
-    print("📦 Preparing balanced dataset with augmentation...")
+    # print("📦 Preparing balanced dataset with augmentation...")
     X, y = balance_dataset_with_augmentation(folder_names)
 
     # Show class distribution
     label_counts = collections.Counter(y)
-    print("\n📊 Class distribution after augmentation:")
-    for label, count in sorted(label_counts.items()):
-        print(f"{folder_names[label]}: {count}")
+    # print("\n📊 Class distribution after augmentation:")
+    # for label, count in sorted(label_counts.items()):
+    #     print(f"{folder_names[label]}: {count}")
 
     # Split the dataset without a fixed random state
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, stratify=y
     )
-    print(f"\n🔹 Train size: {len(X_train)}, Test size: {len(X_test)}")
-    print(f"🔹 Feature size: {X.shape[1]}")
+    # print(f"\n🔹 Train size: {len(X_train)}, Test size: {len(X_test)}")
+    # print(f"🔹 Feature size: {X.shape[1]}")
 
     # SVM is tuned using GridSearchCV with a small parameter grid.
     svm_model = SVC(kernel='rbf')
@@ -205,15 +205,15 @@ def main():
     trained_models = {}
 
     for name, (model, scaler) in models.items():
-        print(f"\n🚀 Training {name}...")
+        # print(f"\n🚀 Training {name}...")
         trained_model, acc, trained_scaler = train_model(model, X_train, X_test, y_train, y_test, scaler)
         results[name] = acc
         trained_models[name] = (trained_model, trained_scaler)
-        print(f"{name} Accuracy: {acc * 100:.2f}%")
+        # print(f"{name} Accuracy: {acc * 100:.2f}%")
 
-    print("\n📈 Final Model Accuracies (sorted):")
-    for name, acc in sorted(results.items(), key=lambda x: x[1], reverse=True):
-        print(f"{name}: {acc * 100:.2f}%")
+    # print("\n📈 Final Model Accuracies (sorted):")
+    # for name, acc in sorted(results.items(), key=lambda x: x[1], reverse=True):
+    #     print(f"{name}: {acc * 100:.2f}%")
 
     def predict_audio(file_path, model, scaler=None):
         wav_path = convert_to_wav(file_path)
@@ -236,12 +236,44 @@ def main():
 # -----------------------------
 
 if __name__ == "__main__":
-    best_accuracies = []
-    runtimes = 1  # Adjust the number of runs as needed
+    best_models = []
+    avg_acc = 0.0
+    runtimes = 500  # Adjust the number of runs as needed
+    print('--------Process Started--------')
+    model_points = {
+        'Random Forest' : 0,
+        'XGBoost' : 0,
+        'SVM (RBF)' : 0,
+        'Logistic Regression' : 0,
+        'k-NN' : 0,
+        'Gradient Boosting' : 0,
+        'Naive Bayes' : 0,
+        'MLP' : 0
+    }
     for i in range(runtimes):
-        results, trained_models, predict_func = main()
-        best_accuracy = max(results.values())
-        best_accuracies.append(best_accuracy)
-    print("\nBest Accuracies over runs:")
-    for idx, acc in enumerate(best_accuracies, 1):
-        print(f"Run {idx}: {acc * 100:.2f}%")
+            results, trained_models, predict_func = main()
+            # Find the best model name and its accuracy for this run
+            best_model_name, best_accuracy = max(results.items(), key=lambda x: x[1])
+            best_models.append([best_model_name, best_accuracy])
+            model_points[best_model_name] += 1
+            avg_acc += best_accuracy
+            print(f"Completed: {i + 1} / {runtimes}, Best Model: {best_model_name}, Highest Accuracy: {best_accuracy}")
+
+    import pandas as pd
+
+        # Create a pandas DataFrame from best_models list with appropriate columns
+    df = pd.DataFrame(best_models, columns=["Model", "Accuracy"])
+    df["Run"] = range(1, len(best_models) + 1)
+        # Reorder columns
+    df = df[["Run", "Model", "Accuracy"]]
+        
+        # Save DataFrame to a CSV file
+    df.to_csv("best_models.csv", index=False)
+        
+    print("CSV file 'best_models.csv' has been saved")
+
+    print(f'Average Accuracy = {round(((avg_acc / runtimes) * 100), 2)} ')
+    
+    print(model_points)
+
+    print("Process Completed")

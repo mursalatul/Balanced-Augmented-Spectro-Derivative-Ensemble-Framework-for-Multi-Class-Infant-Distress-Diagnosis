@@ -10,7 +10,7 @@
 5. [Dataset](#dataset)
 6. [Model Training and Evaluation](#model-training-and-evaluation)
 7. [Dependencies](#dependencies)
-8. [Contributing](#contributing)
+8. [Authors](#authors)
 9. [License](#license)
 10. [Contact](#contact)
 
@@ -106,8 +106,16 @@ We have worked with 8 types of machine learning algorithms to predict the cause 
 - Python 3.10 or above
 - See `requirements.txt` for full list of packages (`numpy`, `librosa`, `scikit-learn`, `xgboost`, `pydub`).
 
-### Contributing
-[Invite contributions, e.g., "Contributions are welcome! Please submit a pull request or open an issue to discuss improvements."]
+### Authors
+
+Tthe following individuals contributed to the research, development, and implementation of the model:
+
+- **X** 
+- **a** 
+- **b** 
+- **c**
+
+We thank our advisors for their support in making this project possible.
 
 ### License
 [Specify the license, e.g., "This project is licensed under the MIT License. See the `LICENSE` file for details."]

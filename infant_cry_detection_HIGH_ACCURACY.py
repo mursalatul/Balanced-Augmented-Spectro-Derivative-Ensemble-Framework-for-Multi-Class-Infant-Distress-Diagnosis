@@ -36,17 +36,27 @@ def convert_to_wav(file_path):
         return None
 
 def extract_features(audio, sample_rate):
-    """Extract MFCC-based features including deltas."""
+    """Extract MFCC-based features along with additional spectral features."""
     try:
+        # MFCCs and their derivatives
         mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
         delta = librosa.feature.delta(mfccs)
         delta2 = librosa.feature.delta(mfccs, order=2)
+        
+        # Additional spectral features
+        spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=audio, sr=sample_rate))
+        spectral_rolloff = np.mean(librosa.feature.spectral_rolloff(y=audio, sr=sample_rate))
+        zero_crossing_rate = np.mean(librosa.feature.zero_crossing_rate(y=audio))
+        
         features = np.hstack([
             np.mean(mfccs.T, axis=0),
             np.std(mfccs.T, axis=0),
             np.max(mfccs.T, axis=0),
             np.mean(delta.T, axis=0),
-            np.mean(delta2.T, axis=0)
+            np.mean(delta2.T, axis=0),
+            spectral_centroid,
+            spectral_rolloff,
+            zero_crossing_rate
         ])
         return features
     except Exception as e:
@@ -98,7 +108,8 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
                 continue
             try:
                 audio, sr = librosa.load(wav_path, res_type='kaiser_fast')
-            except:
+            except Exception as e:
+                print(f"Error loading {wav_path}: {e}")
                 continue
             features = extract_features(audio, sr)
             if features is not None:
@@ -107,6 +118,7 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
         X.extend(current_features)
         y.extend([label] * len(current_features))
 
+        # Augment data for minority classes
         if label == max_class:
             continue
 
@@ -119,7 +131,8 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
                     continue
                 try:
                     audio, sr = librosa.load(wav_path, res_type='kaiser_fast')
-                except:
+                except Exception as e:
+                    print(f"Error loading {wav_path}: {e}")
                     continue
                 for aug_audio in augment_audio(audio, sr):
                     aug_features = extract_features(aug_audio, sr)
@@ -154,6 +167,7 @@ def train_model(model, X_train, X_test, y_train, y_test, scaler=None):
 # -----------------------------
 
 def main():
+    # No fixed seeds here to allow variability in each run
     folder_names = ['belly_pain', 'burping', 'discomfort', 'hungry', 'tired']
     print("📦 Preparing balanced dataset with augmentation...")
     X, y = balance_dataset_with_augmentation(folder_names)
@@ -164,23 +178,27 @@ def main():
     for label, count in sorted(label_counts.items()):
         print(f"{folder_names[label]}: {count}")
 
-    # Split
+    # Split the dataset without a fixed random state
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
+        X, y, test_size=0.2, stratify=y
     )
     print(f"\n🔹 Train size: {len(X_train)}, Test size: {len(X_test)}")
     print(f"🔹 Feature size: {X.shape[1]}")
 
-    # Models
+    # SVM is tuned using GridSearchCV with a small parameter grid.
+    svm_model = SVC(kernel='rbf')
+    param_grid = {'C': [0.1, 1, 10], 'gamma': ['scale', 'auto']}
+    svm_grid = GridSearchCV(svm_model, param_grid, cv=3)
+    
     models = {
-        'Random Forest': (RandomForestClassifier(random_state=42), None),
-        'XGBoost': (XGBClassifier(n_estimators=100, use_label_encoder=False, eval_metric='mlogloss', random_state=42), None),
-        'SVM (RBF)': (SVC(kernel='rbf', random_state=42), StandardScaler()),
-        'Logistic Regression': (LogisticRegression(max_iter=1000, random_state=42), StandardScaler()),
+        'Random Forest': (RandomForestClassifier(), None),
+        'XGBoost': (XGBClassifier(n_estimators=100, use_label_encoder=False, eval_metric='mlogloss'), None),
+        'SVM (RBF)': (svm_grid, StandardScaler()),
+        'Logistic Regression': (LogisticRegression(max_iter=1000), StandardScaler()),
         'k-NN': (KNeighborsClassifier(n_neighbors=5), StandardScaler()),
-        'Gradient Boosting': (GradientBoostingClassifier(random_state=42), None),
+        'Gradient Boosting': (GradientBoostingClassifier(), None),
         'Naive Bayes': (GaussianNB(), None),
-        'MLP': (MLPClassifier(hidden_layer_sizes=(100,), max_iter=500, random_state=42), StandardScaler())
+        'MLP': (MLPClassifier(hidden_layer_sizes=(100,), max_iter=500), StandardScaler())
     }
 
     results = {}
@@ -211,33 +229,12 @@ def main():
         pred = model.predict(features)[0]
         return folder_names[pred]
 
-    return trained_models, predict_audio
+    return results, trained_models, predict_audio
 
 # -----------------------------
 # Entry Point
 # -----------------------------
 
 if __name__ == "__main__":
-    # -----------------------------
-    # Run 1 time and test a file
-    # -----------------------------
-    # trained_models, predict_func = main()
-    # test_file = "D:/defence/model/donateacry_corpus_cleaned_and_updated_data/discomfort/1309B82C-F146-46F0-A723-45345AFA6EA8-1430703937-1.0-f-48-dc.wav"
-    # print(f"\n🔍 Prediction Results for: {test_file}")
-    # for name, (model, scaler) in trained_models.items():
-    #     prediction = predict_func(test_file, model, scaler)
-    #     print(f"{name}: {prediction}")
 
-    # -----------------------------
-    # run n times and give a list of highest accuracy
-    # -----------------------------
-    best_accuracies = []
-    runtimes = 1
-    for i in range(runtimes):
-        results, trained_models, predict_func = main()
-        best_accuracy = max(results.values())
-        best_accuracies.append(best_accuracy)
-    print(best_accuracies)
-    print("\nBest Accuracies over 5 runs:")
-    for idx, acc in enumerate(best_accuracies, 1):
-        print(f"Run {idx}: {acc * 100:.2f}%")
+            results, trained_models, predict_func = main()

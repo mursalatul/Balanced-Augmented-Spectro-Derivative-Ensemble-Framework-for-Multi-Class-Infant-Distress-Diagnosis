@@ -23,6 +23,8 @@ def main():
     print("📦 Preparing balanced dataset with augmentation...")
 
     # Load and augment the dataset to make all classes equally represented
+    # X: Feature matrix (2D numpy array), each row is a feature vector for one sample
+    # y: Target labels corresponding to each feature vector
     X, y = balance_dataset_with_augmentation(folder_names)
 
     # Count how many samples each class has after balancing
@@ -32,12 +34,13 @@ def main():
         print(f"{folder_names[label]}: {count}")
 
     # Split the dataset into training and testing sets (80% train, 20% test)
+    # stratify=y ensures the class distribution is preserved in both splits
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y)
     print(f"\n🔹 Train size: {len(X_train)}, Test size: {len(X_test)}")
     print(f"🔹 Feature size: {X.shape[1]}")
 
     # Load the models to train (e.g., SVM, Random Forest, etc.)
-    models = get_models()
+    models = get_models()  # Returns a dictionary: model_name -> (model_object, scaler)
     results = {}  # Store evaluation metrics for each model
     trained_models = {}  # Store trained models and their scalers
 

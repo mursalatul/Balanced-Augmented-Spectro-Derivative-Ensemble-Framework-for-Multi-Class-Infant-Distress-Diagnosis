@@ -8,48 +8,64 @@ warnings.filterwarnings("ignore", message=".*does not have valid feature names.*
 os.environ["LOKY_MAX_CPU_COUNT"] = "4"
 
 # Audio feature extraction tools
-import librosa
-from voice_processing import convert_to_wav, extract_features
+import librosa  # Used to load audio and extract features
+from voice_processing import (
+    convert_to_wav,
+    extract_features,
+)  # Custom functions for audio preprocessing
 
 # Evaluation and preprocessing
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.pipeline import Pipeline
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+)  # Metrics for model evaluation
+from sklearn.model_selection import GridSearchCV  # For hyperparameter tuning
+from sklearn.preprocessing import (
+    StandardScaler,
+    MinMaxScaler,
+)  # Feature scaling methods
+from sklearn.pipeline import Pipeline  # To build scalable pipelines
 
 # Import many different classifiers for experimentation
 from sklearn.ensemble import (
-    RandomForestClassifier,
-    GradientBoostingClassifier,
-    ExtraTreesClassifier,
-    AdaBoostClassifier,
-    HistGradientBoostingClassifier,
+    RandomForestClassifier,  # Ensemble method using decision trees
+    GradientBoostingClassifier,  # Boosting technique
+    ExtraTreesClassifier,  # Another tree ensemble method
+    AdaBoostClassifier,  # Boosting classifier
+    HistGradientBoostingClassifier,  # Histogram-based gradient boosting
 )
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier  # Simple decision tree
 from sklearn.linear_model import (
-    LogisticRegression,
-    SGDClassifier,
-    PassiveAggressiveClassifier,
-    RidgeClassifier,
+    LogisticRegression,  # Logistic regression classifier
+    SGDClassifier,  # Stochastic Gradient Descent
+    PassiveAggressiveClassifier,  # Passive-aggressive learning
+    RidgeClassifier,  # Ridge regression for classification
 )
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from catboost import CatBoostClassifier
+from xgboost import XGBClassifier  # eXtreme Gradient Boosting
+from lightgbm import LGBMClassifier  # LightGBM classifier
+from catboost import CatBoostClassifier  # CatBoost classifier
 
-from sklearn.svm import SVC, LinearSVC
+from sklearn.svm import SVC, LinearSVC  # Support Vector Machines
 from sklearn.discriminant_analysis import (
-    LinearDiscriminantAnalysis,
-    QuadraticDiscriminantAnalysis,
+    LinearDiscriminantAnalysis,  # LDA
+    QuadraticDiscriminantAnalysis,  # QDA
 )
 
-from sklearn.naive_bayes import GaussianNB, BernoulliNB, ComplementNB, MultinomialNB
+from sklearn.naive_bayes import (
+    GaussianNB,
+    BernoulliNB,
+    ComplementNB,
+    MultinomialNB,
+)  # Naive Bayes variants
 from sklearn.neighbors import (
-    KNeighborsClassifier,
-    NearestCentroid,
-    RadiusNeighborsClassifier,
+    KNeighborsClassifier,  # k-Nearest Neighbors
+    NearestCentroid,  # Centroid-based classifier
+    RadiusNeighborsClassifier,  # Radius-based neighbors
 )
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.neural_network import MLPClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier  # Probabilistic model
+from sklearn.neural_network import MLPClassifier  # Multi-layer perceptron (neural net)
 
 # Wrappers for handling multi-class classification
 from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
@@ -85,10 +101,12 @@ def train_model(model, X_train, X_test, y_train, y_test, scaler=None):
     y_pred = model.predict(X_test)
 
     # Evaluate performance using common classification metrics
-    acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred, average="macro", zero_division=0)
-    rec = recall_score(y_test, y_pred, average="macro", zero_division=0)
-    f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
+    acc = accuracy_score(y_test, y_pred)  # Accuracy
+    prec = precision_score(
+        y_test, y_pred, average="macro", zero_division=0
+    )  # Precision
+    rec = recall_score(y_test, y_pred, average="macro", zero_division=0)  # Recall
+    f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)  # F1-score
 
     # Collect and return metrics
     metrics = {"accuracy": acc, "precision": prec, "recall": rec, "f1_score": f1}
@@ -225,20 +243,23 @@ def predict_audio(file_path, model, scaler=None):
     Returns:
         int or str: Predicted label index or error message
     """
-    wav_path = convert_to_wav(file_path)
+    wav_path = convert_to_wav(file_path)  # Convert to WAV format
     if not wav_path:
         return "Invalid audio"
 
-    # Load audio and extract features
+    # Load the audio file and get waveform + sample rate
     audio, sr = librosa.load(wav_path, res_type="kaiser-fast")
+    # audio: numpy array containing time-series waveform
+    # sr: sampling rate (e.g., 22050 Hz)
+
+    # Extract features using custom method
     feats = extract_features(audio, sr)
     if feats is None:
         return "Could not extract features"
 
-    feats = [feats]  # Wrap in list for model input shape
+    feats = [feats]  # Wrap in list to create 2D input shape for scikit-learn
     if scaler:
-        feats = scaler.transform(feats)
+        feats = scaler.transform(feats)  # Scale using same scaler as training
 
-    # Predict and return the label
-    pred = model.predict(feats)[0]
+    pred = model.predict(feats)[0]  # Predict label
     return pred

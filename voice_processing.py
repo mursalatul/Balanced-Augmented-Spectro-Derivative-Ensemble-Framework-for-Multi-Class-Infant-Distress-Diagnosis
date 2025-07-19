@@ -1,8 +1,8 @@
-import os
-import numpy as np
-import librosa
-from pydub import AudioSegment
-import random
+import os  # Provides a way of using operating system-dependent functionality like file paths
+import numpy as np  # Used for numerical operations and handling arrays
+import librosa  # Used for audio processing
+from pydub import AudioSegment  # Used for audio file conversion
+import random  # Used to generate random numbers for augmentation
 
 
 def convert_to_wav(file_path):
@@ -20,10 +20,10 @@ def convert_to_wav(file_path):
         if file_path.lower().endswith(".wav"):
             return file_path
 
-        # Create the new file name with .wav extension
+        # wav_path (str): New file path with .wav extension
         wav_path = os.path.splitext(file_path)[0] + ".wav"
 
-        # Load and convert the file using pydub
+        # audio (AudioSegment): Loaded audio using pydub
         audio = AudioSegment.from_file(file_path)
         audio.export(wav_path, format="wav")
         return wav_path
@@ -44,23 +44,29 @@ def extract_features(audio, sample_rate):
         np.array or None: Extracted features as a 1D array or None on error.
     """
     try:
-        # Extract 40 MFCC features from audio
+        # mfccs (np.ndarray): 40 Mel-frequency cepstral coefficients
         mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
 
-        # Calculate first and second-order derivatives of MFCCs
+        # delta (np.ndarray): First-order derivative of MFCCs
         delta = librosa.feature.delta(mfccs)
+
+        # delta2 (np.ndarray): Second-order derivative of MFCCs
         delta2 = librosa.feature.delta(mfccs, order=2)
 
-        # Extract additional spectral features
+        # spectral_centroid (float): Mean of spectral centroid values
         spectral_centroid = np.mean(
             librosa.feature.spectral_centroid(y=audio, sr=sample_rate)
         )
+
+        # spectral_rolloff (float): Mean of spectral rolloff values
         spectral_rolloff = np.mean(
             librosa.feature.spectral_rolloff(y=audio, sr=sample_rate)
         )
+
+        # zero_crossing_rate (float): Mean of zero crossing rate values
         zero_crossing_rate = np.mean(librosa.feature.zero_crossing_rate(y=audio))
 
-        # Combine all features into one array
+        # features (np.ndarray): Combined feature vector
         features = np.hstack(
             [
                 np.mean(mfccs.T, axis=0),  # Average of MFCCs
@@ -115,62 +121,85 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
             X (np.array): Feature matrix.
             y (np.array): Corresponding class labels.
     """
-    class_counts = {}  # Store number of samples per class
-    class_files = {}  # Store file list per class
+    # class_counts (dict): Stores the number of files in each class
+    class_counts = {}
 
-    # Loop through each class folder
+    # class_files (dict): Stores the list of file names per class
+    class_files = {}
+
+    # label (int): Integer label for the class
+    # folder (str): Folder name corresponding to a class
     for label, folder in enumerate(folder_names):
+        # path (str): Full path to the folder
         path = os.path.join(base_path, folder)
+
         if not os.path.exists(path):
             continue
 
-        # Get list of supported audio files in the folder
+        # files (list): List of supported audio file names
         files = [
             f
             for f in os.listdir(path)
             if f.lower().endswith((".wav", ".mp3", ".m4a", ".ogg"))
         ]
+
         class_counts[label] = len(files)
         class_files[label] = files
 
-    # Identify class with the most samples
+    # max_class (int): Label of the class with maximum samples
     max_class = max(class_counts, key=class_counts.get)
+
+    # max_samples (int): Number of samples in the majority class
     max_samples = class_counts[max_class]
+
     print(f"\n📌 Max class: {folder_names[max_class]} with {max_samples} samples.")
 
-    X, y = [], []  # Feature list and label list
+    # X (list): List to hold feature vectors
+    # y (list): List to hold corresponding labels
+    X, y = [], []
 
-    # Process each class
     for label, files in class_files.items():
+        # folder_path (str): Full path to the folder of current class
         folder_path = os.path.join(base_path, folder_names[label])
+
+        # current_features (list): Holds extracted features for the current class
         current_features = []
 
-        # Step 1: Extract features from original files
+        # file (str): Name of the audio file
         for file in files:
+            # file_path (str): Full path to the audio file
             file_path = os.path.join(folder_path, file)
+
+            # wav_path (str or None): Converted WAV file path
             wav_path = convert_to_wav(file_path)
             if not wav_path:
                 continue
 
             try:
+                # audio (np.ndarray 1D): Audio waveform signal
+                # sr (int): Sampling rate
                 audio, sr = librosa.load(wav_path, res_type="kaiser_fast")
             except Exception as e:
                 print(f"Error loading {wav_path}: {e}")
                 continue
 
+            # feats (np.array): Extracted features
             feats = extract_features(audio, sr)
             if feats is not None:
                 current_features.append(feats)
 
-        # Store features and labels
+        # Add features and labels to final lists
         X.extend(current_features)
         y.extend([label] * len(current_features))
 
-        # Step 2: If current class has fewer samples, augment data
-        if label == max_class:
-            continue  # Skip augmentation for majority class
-
+        # current_count (int): Number of samples currently extracted for this class
         current_count = len(current_features)
+
+        # Skip augmentation for the majority class
+        if label == max_class:
+            continue
+
+        # Augment until class is balanced
         while current_count < max_samples:
             for file in files:
                 file_path = os.path.join(folder_path, file)
@@ -184,7 +213,9 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
                     print(f"Error loading {wav_path}: {e}")
                     continue
 
+                # aug_audio (np.ndarray): Augmented version of the original audio
                 for aug_audio in augment_audio(audio, sr):
+                    # aug_feats (np.array): Features from augmented audio
                     aug_feats = extract_features(aug_audio, sr)
                     if aug_feats is not None:
                         X.append(aug_feats)

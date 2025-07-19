@@ -1,5 +1,5 @@
-# Infant Cry Detection Model
 
+# Infant Cry Detection Model
 
 ## Table of Contents
 
@@ -16,108 +16,197 @@
 
 ---
 
-### About the Model
+## About the Model
 
-The Infant Cry Detection Model is a machine learning system designed to analyze infant cries and predict their underlying causes, such as hunger, discomfort, or tiredness, with an impressive accuracy of 98.67%. Built using advanced audio feature extraction with Librosa and a robust ensemble of classifiers (including Random Forest, XGBoost, and SVM), this model processes audio inputs to provide reliable predictions. The project aims to assist parents, caregivers, and healthcare professionals by offering insights into an infant's needs, fostering better care and understanding.
+The **Infant Cry Detection Model** is a machine learning system designed to analyze infant cries and predict their underlying causes, such as hunger, discomfort, or tiredness, with an impressive accuracy of **98.67%**. 
 
-### File Information
+Built using advanced audio feature extraction techniques with **Librosa** and a robust ensemble of classifiers (including **Random Forest**, **XGBoost**, and **SVM**), this model processes `.wav` audio files to provide reliable predictions.
 
-- `infant_cry_detection_HIGH_ACCURACY.py`: Script for training the machine learning models and view accuracy.
-- `infant_cry_detection_HIGH_ACCURACY_notebookv.ipynb`: same as infant_cry_detection_HIGH_ACCURACY.py by it is a nootbook version.
-- `requirements.txt`: required Python packages.
-- `accuracy_proof.csv`: a csv file containing the result of 500 times model train. Highest accuracy holder model name and the acccuracy number is stored here.
+This system is aimed at assisting **parents**, **caregivers**, and **healthcare professionals** by offering insights into an infant's needs, fostering better care and understanding.
 
-### Installation Process
-1. Clone the repository:  
+---
+
+## File Information
+
+| File Name            | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| `main.py`            | Main script that balances data, trains models, evaluates performance, and saves the best model. |
+| `models.py`          | Contains model definitions, training functions, evaluation metrics, and model utilities. |
+| `voice_processing.py`| Handles audio preprocessing, MFCC extraction, data balancing, and augmentation techniques. |
+| `requirements.txt`   | Lists all required Python dependencies.                                     |
+| `README.md`          | Project documentation and setup instructions.                              |
+
+---
+
+## Installation Process
+
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/mursalatul/cry-prediction.git
+   cd cry-prediction
    ```
 
-2. Create a virtual environment:  
+2. **Create a virtual environment:**
    ```bash
    python -m venv venv
    ```
 
-3. Activate the virtual environment:  
-   - **Windows**:  
+3. **Activate the virtual environment:**
+   - **Windows:**
      ```bash
      venv\Scripts\activate
      ```
-   - **macOS/Linux**:  
+   - **macOS/Linux:**
      ```bash
      source venv/bin/activate
      ```
 
-4. Install the requirements:  
+4. **Install required packages:**
    ```bash
    pip install -r requirements.txt
    ```
-   make sure to install `ffmpeg`. suppose you are using conda, then the comment will be
-   ```bash
-   conda install ffmpeg
-   ```
 
-5. Ensure you have the necessary extensions installed in **VS Code** to run Jupyter notebooks.
+5. **Install `ffmpeg` if not already installed:**
+   - If you're using conda:
+     ```bash
+     conda install ffmpeg
+     ```
 
-6. Download the dataset from [this link](https://github.com/gveres/donateacry-corpus).  
-   Copy the folders from the <b>donateacry_corpus_cleaned_and_updated_data</b> directory and place them where you cloned the repository.
+6. **(Optional)** Install necessary Python extensions for **VS Code** if you're using it as your IDE.
 
+7. **Download and place the dataset:**
+   - Dataset link: [DonateACry Corpus](https://github.com/gveres/donateacry-corpus)
+   - Use the folder `donateacry_corpus_cleaned_and_updated_data`
+   - Copy all category folders into the root of your project directory.
 
-### Usage
-- Run : `python infant_cry_detection_HIGH_ACCURACY.py`
-it may need some time to precess the data, train the model and show you the result.
+---
 
-### Dataset
-- Dataset link: [donatecry-corpus](https://github.com/gveres/donateacry-corpus)
-- Dataset format: The dataset has 3 folder. Among them we will use the <b>donateacry_corpus_cleaned_and_updated_data</b> as it has all the cleaned data. The contants are:
-<table>
-   <tr>
-      <td>Data Folder Name</td>
-      <td>Number of Data(.wav audio)</td>
-   </tr>
-   <tr>
-      <td>belly_pan</td>
-      <td>16</td>
-   </tr>
-   <tr>
-      <td>burping</td>
-      <td>8</td>
-   </tr>
-   <tr>
-      <td>discomfort</td>
-      <td>27</td>
-   </tr>
-   <tr>
-      <td>hungry</td>
-      <td>382</td>
-   </tr>
-   <tr>
-      <td>tired</td>
-      <td>24</td>
-   </tr>
-</table>
+## Usage
 
-### Model Training and Evaluation
-We have worked with 8 types of machine learning algorithms to predict the cause of crying. Below are the average, highest, and lowest accuracies:
+To run the complete training and evaluation pipeline:
 
+```bash
+python main.py
+```
 
-### Dependencies
-[List key dependencies or refer to requirements.txt, e.g.,]
-- Python 3.10 or above
-- See `requirements.txt` for full list of packages (`numpy`, `librosa`, `scikit-learn`, `xgboost`, `pydub`).
+It will:
+- Preprocess and augment the data.
+- Train multiple models.
+- Display performance metrics.
+- Save the best model and scaler in a `.pkl` file.
 
-### Authors
+---
 
-Tthe following individuals contributed to the research, development, and implementation of the model:
+## Dataset
 
-- **X** 
-- **a** 
-- **b** 
-- **c**
+- **Dataset Source:** [DonateACry Corpus](https://github.com/gveres/donateacry-corpus)
+- **Used Folder:** `donateacry_corpus_cleaned_and_updated_data`
+- **Categories:**
 
-We thank our advisors for their support in making this project possible.
+| Data Folder Name | Number of Audio Files |
+|------------------|------------------------|
+| belly_pain       | 16                     |
+| burping          | 8                      |
+| discomfort       | 27                     |
+| hungry           | 382                    |
+| tired            | 24                     |
 
-### License
-[Specify the license, e.g., "This project is licensed under the MIT License. See the `LICENSE` file for details."]
+Due to the imbalance in original dataset, we applied **data augmentation** to ensure all classes are fairly represented during training.
 
-### Contact
+---
+
+## Model Training and Evaluation
+
+We evaluated **27 different machine learning algorithms**. The top-performing models are listed below:
+
+- ✅ **Random Forest**
+- ✅ **XGBoost**
+- ✅ **Support Vector Machine (SVM)**
+
+### Sample Output:
+
+```
+📦 Preparing balanced dataset with augmentation...
+
+📊 Class distribution after augmentation:
+belly_pain: 382
+burping: 382
+discomfort: 382
+hungry: 382
+tired: 382
+
+🔹 Train size: 1528, Test size: 382
+🔹 Feature size: 40
+
+🚀 Training Random Forest...
+Random Forest: Accuracy=98.67%  Precision=98.70%  Recall=98.65%  F1=98.67%
+
+📈 Final Model Metrics (sorted by accuracy):
+Random Forest: Acc=98.67%  Prec=98.70%  Rec=98.65%  F1=98.67%
+
+💾 Best model (Random Forest) and scaler saved to 'random_forest_model.pkl'
+```
+
+---
+
+## Dependencies
+
+- Python 3.10+
+- numpy
+- librosa
+- pydub
+- scikit-learn
+- xgboost
+- soundfile
+- tqdm
+- ffmpeg (external dependency)
+
+Refer to `requirements.txt` for the full list.
+
+---
+
+## Authors
+
+The following individuals contributed to the research, development, and implementation of this project:
+
+- 🎓 [**Prof. Md Based**](#)  
+  *Chairman, Dept. of EEE, Dhaka International University*
+
+- 👨‍💻 [**Md Mursalatul Islam Pallob**](https://www.linkedin.com/in/mursalatul/)  
+  *Researcher & Developer*
+
+- 👩‍💻 [**Nahid Usha**](#)  
+  *Researcher & Developer*
+
+- 👩‍🔬 [**Farnaz Bashir Orpita**](#)  
+  *Researcher*
+
+- 👨‍🔧 [**Nahid Hasan**](#)  
+  *Researcher*
+
+- 👩‍🏫 [**Maliha Nusrat Tahira**](#)  
+  *Researcher*
+
+We are grateful to our advisor and all contributors for their valuable guidance and support throughout this project.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+---
+
+## Contact
+
+For any queries or collaborations, contact:
+
+📧 mursalatulislam@gmail.com  
+🔗 [GitHub Repository](https://github.com/mursalatul/cry-prediction)
+
+---
+
+## 📄 Research Paper
+
+For more details on the methodology, dataset analysis, and evaluation, please read the full research paper:  
+👉 [View Paper on ResearchGate / Google Drive / Journal Link Here](https://your-paper-link.com) *(replace with actual link)*

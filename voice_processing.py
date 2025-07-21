@@ -176,8 +176,16 @@ def balance_dataset_with_augmentation(folder_names, base_path="."):
                 continue
 
             try:
-                # audio (np.ndarray 1D): Audio waveform signal
-                # sr (int): Sampling rate
+                """
+                audio (np.ndarray 1D): The actual waveform signal — a
+                NumPy array of float32 values between -1.0 and 1.0. This
+                array contains the amplitude values of the audio signal
+                over time.
+
+                sr (int): The sampling rate (number of samples per
+                second). By default, librosa.load() resamples all audio
+                to 22050 Hz unless you specify otherwise.
+                """
                 audio, sr = librosa.load(wav_path, res_type="kaiser_fast")
             except Exception as e:
                 print(f"Error loading {wav_path}: {e}")

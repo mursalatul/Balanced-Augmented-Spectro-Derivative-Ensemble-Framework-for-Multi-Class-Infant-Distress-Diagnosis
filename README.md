@@ -169,8 +169,8 @@ Refer to `requirements.txt` for the full list.
 
 The following individuals contributed to the research, development, and implementation of this project:
 
-- 🎓 [**Prof. Md Based**](#)  
-  *Chairman, Dept. of EEE, Dhaka International University*
+- 🎓 [**Md. Tahzib Ul Islam**](#)  
+  *Chairman, Dept. of CSE, Dhaka International University*
 
 - 👨‍💻 [**Md Mursalatul Islam Pallob**](https://www.linkedin.com/in/mursalatul/)  
   *Researcher & Developer*

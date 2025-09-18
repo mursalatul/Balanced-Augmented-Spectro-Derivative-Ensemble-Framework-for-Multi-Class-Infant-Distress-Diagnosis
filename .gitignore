@@ -4,3 +4,13 @@
 # dont track the virtual environments
 .conda
 venv
+
+*.png
+
+*.pkl
+*.pyc
+
+*.zip
+*.json
+*.tsv
+*.tfevents

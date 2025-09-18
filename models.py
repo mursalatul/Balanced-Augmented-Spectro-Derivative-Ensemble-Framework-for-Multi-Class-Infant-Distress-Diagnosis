@@ -3,6 +3,7 @@ import warnings
 
 # Suppress specific user warnings to clean up console output
 warnings.filterwarnings("ignore", message=".*does not have valid feature names.*")
+warnings.filterwarnings("ignore", message=".*covariance matrix.*not full rank.*")
 
 # Limit CPU usage warning fix for parallel backends
 os.environ["LOKY_MAX_CPU_COUNT"] = "4"
@@ -115,113 +116,32 @@ def train_model(model, X_train, X_test, y_train, y_test, scaler=None):
 
 def get_models():
     """
-    Define and return a dictionary of various machine learning classifiers
+    Define and return a dictionary of selected machine learning classifiers
     along with their required feature scalers (if any).
 
     Returns:
         dict: {Model name: (Model instance, Scaler instance or None)}
     """
     # SVM model with hyperparameter tuning using grid search
-    svm = SVC(kernel="rbf")
+    svm = SVC(kernel="rbf", probability=True)  # Enable probability for ROC curve
     svm_params = {"C": [0.1, 1, 10], "gamma": ["scale", "auto"]}
     svm_grid = GridSearchCV(svm, svm_params, cv=3)
 
     return {
-        # Ensemble models (tree-based)
-        "Random Forest": (RandomForestClassifier(), None),
-        "Extra Trees": (ExtraTreesClassifier(), None),
-        "AdaBoost": (AdaBoostClassifier(), None),
-        "Gradient Boosting": (GradientBoostingClassifier(), None),
-        "Hist Gradient Boosting": (HistGradientBoostingClassifier(), None),
-        # Gradient boosting variants
-        "XGBoost": (
-            XGBClassifier(n_estimators=100, eval_metric="mlogloss", verbosity=0),
-            None,
-        ),
-        "LightGBM": (LGBMClassifier(verbosity=-1, force_col_wise=True), None),
-        "CatBoost": (CatBoostClassifier(verbose=0), None),
-        # Classic classifiers
-        "Decision Tree": (DecisionTreeClassifier(), None),
-        "SGD Classifier": (SGDClassifier(max_iter=1000, tol=1e-3), StandardScaler()),
-        "Passive Aggressive": (
-            PassiveAggressiveClassifier(max_iter=1000),
-            StandardScaler(),
-        ),
-        "Ridge Classifier": (RidgeClassifier(), StandardScaler()),
-        "Nearest Centroid": (NearestCentroid(), None),
-        # Distance-based methods
-        "k-NN": (KNeighborsClassifier(n_neighbors=5), StandardScaler()),
-        # Naive Bayes classifiers (some require input normalization)
-        "GaussianNB": (GaussianNB(), None),
-        "BernoulliNB": (
-            Pipeline(
-                [("minmax", MinMaxScaler(feature_range=(0, 1))), ("clf", BernoulliNB())]
-            ),
-            None,
-        ),
-        "ComplementNB": (
-            Pipeline(
-                [
-                    ("minmax", MinMaxScaler(feature_range=(0, 1))),
-                    ("clf", ComplementNB()),
-                ]
-            ),
-            None,
-        ),
-        "MultinomialNB": (
-            Pipeline(
-                [
-                    ("minmax", MinMaxScaler(feature_range=(0, 1))),
-                    ("clf", MultinomialNB()),
-                ]
-            ),
-            None,
-        ),
-        # Support Vector Machines
+        # Support Vector Machine
         "SVM (RBF)": (svm_grid, StandardScaler()),
-        # Kernel approximation based classifiers
-        "Kernel Approx SVM": (
-            Pipeline(
-                [
-                    ("sampler", RBFSampler()),
-                    ("scaler", StandardScaler()),
-                    ("svc", LinearSVC(max_iter=1000)),
-                ]
-            ),
-            None,
-        ),
-        "Nystroem SVM": (
-            Pipeline(
-                [
-                    ("nystroem", Nystroem()),
-                    ("scaler", StandardScaler()),
-                    ("svc", LinearSVC(max_iter=1000)),
-                ]
-            ),
-            None,
-        ),
-        # Multi-class wrappers
-        "One-vs-Rest LR": (
-            OneVsRestClassifier(LogisticRegression(max_iter=1000)),
-            StandardScaler(),
-        ),
-        "One-vs-One LR": (
-            OneVsOneClassifier(LogisticRegression(max_iter=1000)),
-            StandardScaler(),
-        ),
-        # Discriminant analysis
-        "Linear Discriminant Analysis": (LinearDiscriminantAnalysis(), None),
-        "Quadratic Discriminant Analysis": (
-            QuadraticDiscriminantAnalysis(reg_param=0.1),
-            None,
-        ),
-        # Probabilistic & kernel-based models
-        "Gaussian Process": (GaussianProcessClassifier(), None),
-        # Neural network model
-        "MLP": (
-            MLPClassifier(hidden_layer_sizes=(100,), max_iter=500),
-            StandardScaler(),
-        ),
+        # Tree-based models
+        "Extra Trees": (ExtraTreesClassifier(n_estimators=100), None),
+        "Random Forest": (RandomForestClassifier(n_estimators=100), None),
+        # Gradient boosting variants
+        "XGBoost": (XGBClassifier(n_estimators=100, eval_metric="mlogloss", verbosity=0), None),
+        "LightGBM": (LGBMClassifier(n_estimators=100, verbosity=-1, force_col_wise=True), None),
+        "CatBoost": (CatBoostClassifier(n_estimators=100, verbose=0), None),
+        "HistGBM": (HistGradientBoostingClassifier(max_iter=100), None),
+        "GBM": (GradientBoostingClassifier(n_estimators=100), None),
+        # Other classifiers
+        "QDA": (QuadraticDiscriminantAnalysis(reg_param=0.2), StandardScaler()),  # Increased reg_param to handle collinearity
+        "MLP": (MLPClassifier(max_iter=1000, early_stopping=True), StandardScaler())
     }
 
 

@@ -117,11 +117,10 @@ Due to the imbalance in original dataset, we applied **data augmentation** to en
 
 ## Model Training and Evaluation
 
-We evaluated **27 different machine learning algorithms**. The top-performing models are listed below:
+We evaluated **10 different machine learning algorithms**. The top-performing models are listed below:
 
-- ✅ **Random Forest**
-- ✅ **XGBoost**
 - ✅ **Support Vector Machine (SVM)**
+- ✅ **Extra Tress**
 
 ### Sample Output:
 
@@ -169,7 +168,7 @@ Refer to `requirements.txt` for the full list.
 
 The following individuals contributed to the research, development, and implementation of this project:
 
-- 🎓 [**Md. Tahzib Ul Islam**](#)  
+- 🎓 [**Prof. Md. Abdul Based**](#)  
   *Chairman, Dept. of CSE, Dhaka International University*
 
 - 👨‍💻 [**Md Mursalatul Islam Pallob**](https://www.linkedin.com/in/mursalatul/)  
